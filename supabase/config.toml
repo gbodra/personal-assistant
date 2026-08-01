@@ -1,0 +1,10 @@
+# PersonalOS local Supabase config (minimal)
+# Expose next_auth + app schemas in the API settings / schemas list.
+
+[api]
+enabled = true
+schemas = ["public", "next_auth", "app"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+major_version = 15

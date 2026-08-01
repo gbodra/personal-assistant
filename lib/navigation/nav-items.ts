@@ -1,0 +1,64 @@
+import type { LucideIcon } from "lucide-react"
+import { Archive, Focus, Settings, Users } from "lucide-react"
+
+export type NavStage = "ga" | "beta" | "hidden"
+
+export type NavItem = {
+  id: string
+  labelKey: "focus" | "board" | "archive" | "family" | "settings"
+  href: string
+  icon: LucideIcon
+  stage: NavStage
+  children?: NavItem[]
+}
+
+export const navItems: NavItem[] = [
+  {
+    id: "focus",
+    labelKey: "focus",
+    href: "/focus",
+    icon: Focus,
+    stage: "ga",
+    children: [
+      {
+        id: "focus-board",
+        labelKey: "board",
+        href: "/focus",
+        icon: Focus,
+        stage: "ga",
+      },
+      {
+        id: "focus-archive",
+        labelKey: "archive",
+        href: "/focus/archive",
+        icon: Archive,
+        stage: "ga",
+      },
+    ],
+  },
+  {
+    id: "family",
+    labelKey: "family",
+    href: "/family",
+    icon: Users,
+    stage: "ga",
+  },
+  {
+    id: "settings",
+    labelKey: "settings",
+    href: "/settings",
+    icon: Settings,
+    stage: "ga",
+  },
+]
+
+export function visibleNavItems(items: NavItem[] = navItems): NavItem[] {
+  return items
+    .filter((item) => item.stage !== "hidden")
+    .map((item) => ({
+      ...item,
+      children: item.children
+        ? visibleNavItems(item.children)
+        : undefined,
+    }))
+}
