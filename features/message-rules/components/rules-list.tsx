@@ -14,6 +14,7 @@ import {
   updateRuleAction,
 } from "@/features/message-rules/actions/rules"
 import type {
+  ContactList,
   MessageRule,
   MessageRuleDraft,
   Priority,
@@ -22,6 +23,7 @@ import type {
 } from "@/features/message-rules/domain/types"
 import { PRIORITIES } from "@/features/message-rules/domain/types"
 import {
+  conditionLabel,
   listItemSummary,
   mirrorSentence,
 } from "@/features/message-rules/domain/summary"
@@ -138,12 +140,12 @@ function EnabledSwitch({
 export function RulesList({
   rules,
   dict,
-  familyCount,
+  contactCounts,
   locale,
 }: Readonly<{
   rules: MessageRule[]
   dict: Dictionary
-  familyCount: number
+  contactCounts: Record<ContactList, number>
   locale: string
 }>) {
   const router = useRouter()
@@ -159,6 +161,7 @@ export function RulesList({
   const [utterance, setUtterance] = useState("")
   const [draft, setDraft] = useState<MessageRuleDraft | null>(null)
   const [tagDraft, setTagDraft] = useState("")
+  const [themeDraft, setThemeDraft] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [interpreting, setInterpreting] = useState(false)
@@ -175,6 +178,7 @@ export function RulesList({
     setUtterance("")
     setDraft(null)
     setTagDraft("")
+    setThemeDraft("")
     setError(null)
     setConfirmed(false)
     setInterpreting(false)
@@ -216,7 +220,11 @@ export function RulesList({
     const result = await compileRuleAction(utterance)
     setInterpreting(false)
     if (!result.ok) {
-      setError(result.error.message)
+      setError(
+        result.error.message === "RATE_LIMITED"
+          ? dict.rules.rateLimited
+          : result.error.message
+      )
       return
     }
     setDraft(result.data)
@@ -280,6 +288,50 @@ export function RulesList({
       actions: { ...draft.actions, tag_names: tagNames },
     })
     setConfirmed(true)
+  }
+
+  function updateConditions(conditions: RuleCondition[]) {
+    if (!draft) return
+    setDraft({ ...draft, conditions, isCatchAll: false })
+    setConfirmed(true)
+  }
+
+  function addTheme() {
+    if (!draft) return
+    const theme = themeDraft.trim()
+    if (!theme) return
+    const existing = draft.conditions.find((c) => c.type === "theme_any")
+    if (existing && existing.type === "theme_any") {
+      if (existing.themes.includes(theme)) {
+        setThemeDraft("")
+        return
+      }
+      updateConditions(
+        draft.conditions.map((c) =>
+          c.type === "theme_any"
+            ? { ...c, themes: [...c.themes, theme].slice(0, 10) }
+            : c
+        )
+      )
+    } else {
+      updateConditions([
+        ...draft.conditions,
+        { type: "theme_any", themes: [theme] },
+      ])
+    }
+    setThemeDraft("")
+  }
+
+  function removeTheme(theme: string) {
+    if (!draft) return
+    updateConditions(
+      draft.conditions
+        .map((c) => {
+          if (c.type !== "theme_any") return c
+          return { ...c, themes: c.themes.filter((t) => t !== theme) }
+        })
+        .filter((c) => c.type !== "theme_any" || c.themes.length > 0)
+    )
   }
 
   function setCatchAll(value: boolean) {
@@ -682,42 +734,122 @@ export function RulesList({
                   </div>
                 ) : null}
 
-                {familyCount === 0 &&
-                draft.conditions.some(
-                  (c) => c.type === "from_list" && c.list === "family"
-                ) ? (
-                  <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-xs">
-                    <p>{dict.rules.familyEmpty}</p>
-                    <Link
-                      href="/family"
-                      className="text-primary mt-2 inline-flex text-xs font-medium underline-offset-4 hover:underline"
-                    >
-                      {dict.rules.openFamily}
-                    </Link>
-                  </div>
-                ) : null}
+                {(() => {
+                  const emptyList = draft.conditions.find(
+                    (c): c is Extract<RuleCondition, { type: "from_list" }> =>
+                      c.type === "from_list" && contactCounts[c.list] === 0
+                  )
+                  if (!emptyList) return null
+                  return (
+                    <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 text-xs">
+                      <p>
+                        {dict.rules.contactsEmpty.replace(
+                          "{group}",
+                          dict.contacts.groups[emptyList.list]
+                        )}
+                      </p>
+                      <Link
+                        href="/contacts"
+                        className="text-primary mt-2 inline-flex text-xs font-medium underline-offset-4 hover:underline"
+                      >
+                        {dict.rules.openContacts}
+                      </Link>
+                    </div>
+                  )
+                })()}
 
-                <section className="space-y-2">
+                <section className="space-y-3">
                   <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
                     {dict.rules.when}
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {draft.isCatchAll ? (
-                      <Badge variant="secondary">{dict.rules.catchAll}</Badge>
-                    ) : draft.conditions.length === 0 ? (
-                      <Badge variant="outline">{dict.rules.unknownWhen}</Badge>
-                    ) : (
-                      draft.conditions.map((condition, index) => (
-                        <Badge key={`${condition.type}-${index}`} variant="secondary">
-                          {condition.type === "from_list"
-                            ? condition.list
-                            : condition.type === "keyword_any"
-                              ? condition.keywords.join(", ")
-                              : condition.type}
-                        </Badge>
-                      ))
-                    )}
-                  </div>
+
+                  {draft.isCatchAll ? (
+                    <Badge variant="secondary">{dict.rules.catchAll}</Badge>
+                  ) : draft.conditions.length === 0 ? (
+                    <Badge variant="outline">{dict.rules.unknownWhen}</Badge>
+                  ) : (
+                    <>
+                      {(() => {
+                        const whoConditions = draft.conditions.filter(
+                          (c) => c.type !== "theme_any"
+                        )
+                        const themeCondition = draft.conditions.find(
+                          (c) => c.type === "theme_any"
+                        )
+                        const themes =
+                          themeCondition?.type === "theme_any"
+                            ? themeCondition.themes
+                            : []
+                        const hasWho = whoConditions.length > 0
+
+                        return (
+                          <>
+                            {hasWho ? (
+                              <div className="space-y-2">
+                                <Label>{dict.rules.whoLabel}</Label>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {whoConditions.map((condition, index) => (
+                                    <Badge
+                                      key={`${condition.type}-${index}`}
+                                      variant="secondary"
+                                    >
+                                      {conditionLabel(condition, dict)}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+
+                            <div className="space-y-2">
+                              <Label>{dict.rules.themesLabel}</Label>
+                              <p className="text-muted-foreground text-xs">
+                                {dict.rules.themesHint}
+                              </p>
+                              {hasWho && themes.length === 0 ? (
+                                <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
+                                  {dict.rules.missingThemes}
+                                </p>
+                              ) : null}
+                              <div className="flex flex-wrap gap-1.5">
+                                {themes.map((theme) => (
+                                  <Badge
+                                    key={theme}
+                                    variant="secondary"
+                                    className="cursor-pointer"
+                                    onClick={() => removeTheme(theme)}
+                                  >
+                                    {theme} ×
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={themeDraft}
+                                  onChange={(e) =>
+                                    setThemeDraft(e.target.value)
+                                  }
+                                  placeholder={dict.rules.themePlaceholder}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault()
+                                      addTheme()
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={addTheme}
+                                >
+                                  {dict.rules.addTheme}
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        )
+                      })()}
+                    </>
+                  )}
                 </section>
 
                 <section className="space-y-3">

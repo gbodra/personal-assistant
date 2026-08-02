@@ -5,7 +5,7 @@ export type NavStage = "ga" | "beta" | "hidden"
 
 export type NavItem = {
   id: string
-  labelKey: "focus" | "board" | "archive" | "family" | "rules" | "settings"
+  labelKey: "focus" | "board" | "archive" | "contacts" | "rules" | "settings"
   href: string
   icon: LucideIcon
   stage: NavStage
@@ -21,9 +21,9 @@ export const navItems: NavItem[] = [
     stage: "ga",
   },
   {
-    id: "family",
-    labelKey: "family",
-    href: "/family",
+    id: "contacts",
+    labelKey: "contacts",
+    href: "/contacts",
     icon: Users,
     stage: "ga",
   },

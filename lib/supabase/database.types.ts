@@ -213,12 +213,13 @@ export type Database = {
         created_at?: string
       }
     >
-    family_members: GenericTable<
+    important_contacts: GenericTable<
       {
         id: string
         user_id: string
         name: string
         phone: string
+        contact_group: string
         created_at: string
         updated_at: string
       },
@@ -227,24 +228,7 @@ export type Database = {
         user_id: string
         name: string
         phone: string
-        created_at?: string
-        updated_at?: string
-      }
-    >
-    business_partners: GenericTable<
-      {
-        id: string
-        user_id: string
-        name: string
-        phone: string
-        created_at: string
-        updated_at: string
-      },
-      {
-        id?: string
-        user_id: string
-        name: string
-        phone: string
+        contact_group: string
         created_at?: string
         updated_at?: string
       }
@@ -312,7 +296,7 @@ export type Database = {
         group_id: string | null
         participant: string | null
         was_mentioned: boolean
-        user_id: string | null
+        user_id: string
         matched_rule_id: string | null
         card_id: string | null
         classification: Json
@@ -332,7 +316,7 @@ export type Database = {
         group_id?: string | null
         participant?: string | null
         was_mentioned?: boolean
-        user_id?: string | null
+        user_id: string
         matched_rule_id?: string | null
         card_id?: string | null
         classification?: Json

@@ -1,8 +1,13 @@
+import {
+  CONTACT_GROUPS,
+  type ContactGroup,
+} from "@/features/contacts/domain/types"
+
 export const PRIORITIES = ["critical", "high", "normal", "low"] as const
 export type Priority = (typeof PRIORITIES)[number]
 
-export const CONTACT_LISTS = ["family", "partners"] as const
-export type ContactList = (typeof CONTACT_LISTS)[number]
+export const CONTACT_LISTS = CONTACT_GROUPS
+export type ContactList = ContactGroup
 
 export const MESSAGE_TYPES = [
   "text",
@@ -37,16 +42,9 @@ export type MessageTypeCondition = {
   types: MessageType[]
 }
 
-export type KeywordAnyCondition = {
-  type: "keyword_any"
-  keywords: string[]
-  case_sensitive?: boolean
-}
-
-export type KeywordAllCondition = {
-  type: "keyword_all"
-  keywords: string[]
-  case_sensitive?: boolean
+export type ThemeAnyCondition = {
+  type: "theme_any"
+  themes: string[]
 }
 
 export type RuleCondition =
@@ -55,8 +53,7 @@ export type RuleCondition =
   | InGroupsCondition
   | WasMentionedCondition
   | MessageTypeCondition
-  | KeywordAnyCondition
-  | KeywordAllCondition
+  | ThemeAnyCondition
 
 export type CreateActions = {
   disposition: "create"

@@ -1,8 +1,15 @@
+import { redirect } from "next/navigation"
+
 import { SignupForm } from "@/features/auth/components/auth-forms"
 import { getDictionary } from "@/lib/i18n"
 import { getLocale } from "@/lib/i18n/get-locale"
+import { isSignupAllowed } from "@/lib/security/signup"
 
 export default async function SignupPage() {
+  if (!isSignupAllowed()) {
+    redirect("/login")
+  }
+
   const locale = await getLocale()
   const dict = getDictionary(locale)
 

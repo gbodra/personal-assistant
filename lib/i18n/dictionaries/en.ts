@@ -4,10 +4,10 @@ export const en = {
     tagline: "Your personal operating system",
   },
   nav: {
-    focus: "Daily Focus",
+    focus: "Focus",
     board: "Board",
     archive: "Archive",
-    family: "Family",
+    contacts: "Contacts",
     rules: "Rules",
     settings: "Settings",
   },
@@ -73,24 +73,33 @@ export const en = {
     priorityNormal: "Normal",
     priorityLow: "Low",
   },
-  family: {
-    title: "Family",
-    newMember: "Add member",
-    editMember: "Edit member",
+  contacts: {
+    title: "Important contacts",
+    newContact: "Add contact",
+    editContact: "Edit contact",
     name: "Name",
     phone: "Phone",
+    group: "Group",
+    groups: {
+      partners: "Partners",
+      family: "Family",
+      clients: "Clients",
+    },
     actions: "Actions",
     viewCards: "Cards view",
     viewTable: "Table view",
-    empty: "No family members yet",
-    emptyHint: "Add relatives you want to keep track of.",
+    empty: "No important contacts yet",
+    emptyHint:
+      "Add partners, family, or clients you want rules and alerts to recognize.",
     nameRequired: "Name is required",
     phoneRequired: "Phone is required",
-    deleteConfirmTitle: "Delete member?",
+    groupRequired: "Group is required",
+    phoneDuplicate: "This phone is already registered.",
+    deleteConfirmTitle: "Delete contact?",
     deleteConfirmDescription:
-      "This permanently removes the family member.",
-    deletedToast: "Member deleted",
-    savedToast: "Member saved",
+      "This permanently removes the contact.",
+    deletedToast: "Contact deleted",
+    savedToast: "Contact saved",
   },
   rules: {
     title: "Rules",
@@ -109,10 +118,19 @@ export const en = {
     describeHint:
       "Say when a message matters and what to do (priority, tags, create card or ignore).",
     placeholder:
-      'e.g. "Family messages: high priority, family tag, create a Focus card."',
-    exampleFamily: "Family → high + family tag + create card",
-    exampleGroup: "Group X → normal + work tag + create card",
+      'e.g. "When family urgency (illness, injury…) create a high-priority card."',
+    exampleFamily: "Family + urgency/illness → high + family tag",
+    exampleGroup: 'School group + meeting/report themes → normal',
     exampleSpam: "Promos / spam → ignore",
+    whoLabel: "Who sends",
+    themesLabel: "Themes in the message",
+    themesHint:
+      "n8n uses AI to check if the message matches these themes (exact words not required).",
+    addTheme: "Add theme",
+    missingThemes:
+      "No content themes — any message from Who will match.",
+    themePlaceholder: "e.g. family illness or health emergency",
+
     interpret: "Interpret",
     interpreting: "Interpreting your rule…",
     saveRule: "Save rule",
@@ -139,9 +157,9 @@ export const en = {
     missingAction: "Say what to do — priority, tags, and create or ignore.",
     missingCondition: "Apply to all messages?",
     makeCatchAll: "Yes, catch-all",
-    familyEmpty:
-      "No family members yet. This rule uses the Family directory when names exist.",
-    openFamily: "Open Family",
+    contactsEmpty:
+      "No contacts in {group} yet. This rule uses that directory when names exist.",
+    openContacts: "Open Contacts",
     micListening: "Listening…",
     micUnsupported: "Voice unavailable — type the rule.",
     micError: "Could not hear you. Try again or type.",
@@ -151,12 +169,12 @@ export const en = {
     actionIgnore: "ignore",
     conditionFamily: "family",
     conditionPartners: "partners",
+    conditionClients: "clients",
     conditionPhones: "{count} phones",
     conditionGroups: "{count} groups",
     conditionMentioned: "mentioned",
     conditionMessageType: "type: {types}",
-    conditionKeywordsAny: "contains: {keywords}",
-    conditionKeywordsAll: "contains all: {keywords}",
+    conditionThemes: "theme: {themes}",
     priority: {
       critical: "Critical",
       high: "High",
@@ -164,7 +182,9 @@ export const en = {
       low: "Low",
     },
     addTag: "Add tag",
+    rateLimited: "Too many interpretations. Try again in a bit.",
   },
+
   archive: {
     title: "Archive",
     empty: "Nothing archived yet. Completed cards you archive will show up here.",

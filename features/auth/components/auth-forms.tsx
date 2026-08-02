@@ -10,7 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
-export function LoginForm({ dict }: { dict: Dictionary }) {
+export function LoginForm({
+  dict,
+  showSignupLink = false,
+}: {
+  dict: Dictionary
+  showSignupLink?: boolean
+}) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -61,12 +67,17 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
       <Button type="submit" disabled={pending} className="w-full">
         {dict.auth.login}
       </Button>
-      <p className="text-muted-foreground text-center text-sm">
-        {dict.auth.noAccount}{" "}
-        <Link href="/signup" className="text-foreground underline-offset-4 hover:underline">
-          {dict.auth.signup}
-        </Link>
-      </p>
+      {showSignupLink ? (
+        <p className="text-muted-foreground text-center text-sm">
+          {dict.auth.noAccount}{" "}
+          <Link
+            href="/signup"
+            className="text-foreground underline-offset-4 hover:underline"
+          >
+            {dict.auth.signup}
+          </Link>
+        </p>
+      ) : null}
     </form>
   )
 }

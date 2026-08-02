@@ -5,6 +5,10 @@ import Credentials from "next-auth/providers/credentials"
 import { z } from "zod"
 
 import { getServerEnv } from "@/lib/config/env"
+import {
+  checkRateLimit,
+  LOGIN_RATE_LIMIT,
+} from "@/lib/security/rate-limit"
 import { getNextAuthAdmin } from "@/lib/supabase/admin"
 
 const credentialsSchema = z.object({
@@ -38,12 +42,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
             return null
           }
 
-          const { email, password } = parsed.data
+          const email = parsed.data.email.toLowerCase()
+          const rate = checkRateLimit(
+            `login:${email}`,
+            LOGIN_RATE_LIMIT.limit,
+            LOGIN_RATE_LIMIT.windowMs
+          )
+          if (!rate.allowed) {
+            return null
+          }
+
+          const { password } = parsed.data
           const supabase = getNextAuthAdmin()
           const { data: user, error } = await supabase
             .from("users")
             .select("id, name, email, image, password_hash")
-            .eq("email", email.toLowerCase())
+            .eq("email", email)
             .maybeSingle()
 
           if (error || !user?.password_hash) {
@@ -75,23 +89,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         if (session.user && token.sub) {
           session.user.id = token.sub
         }
-
-        if (env.SUPABASE_JWT_SECRET && token.sub && session.user) {
-          const { SignJWT } = await import("jose")
-          const secret = new TextEncoder().encode(env.SUPABASE_JWT_SECRET)
-          const expires = Math.floor(Date.now() / 1000) + 60 * 60
-
-          session.supabaseAccessToken = await new SignJWT({
-            aud: "authenticated",
-            sub: token.sub,
-            email: session.user.email,
-            role: "authenticated",
-          })
-            .setProtectedHeader({ alg: "HS256" })
-            .setExpirationTime(expires)
-            .sign(secret)
-        }
-
         return session
       },
     },

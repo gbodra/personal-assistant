@@ -1,14 +1,14 @@
 # WhatsApp → n8n → PersonalOS (message rules contract)
 
-V1: the Next.js app **only CRUD-configures** rules in Supabase. **n8n evaluates** rules and creates/ignores Focus cards.
+The Next.js app **only CRUD-configures** rules in Supabase. **n8n evaluates** rules and creates/ignores Focus cards.
 
 ## Tables
 
 | Table | Role |
 |-------|------|
 | `app.messages_received` | Ingest from Evolution API |
-| `app.message_rules` | Structured rules (`schema_version = 1`) |
-| `app.family_members` / `app.business_partners` | Phone lists for `from_list` |
+| `app.message_rules` | Structured rules (`schema_version = 3`) |
+| `app.important_contacts` | Phone lists for `from_list` (`contact_group`: `partners` \| `family` \| `clients`) |
 | `app.whatsapp_groups` | Labels ↔ Evolution `external_group_id` |
 | `app.cards` / `app.card_tags` / `app.tags` | Card write path |
 | `app.normalize_phone(text)` | Digits-only phone normalize |
@@ -17,7 +17,7 @@ V1: the Next.js app **only CRUD-configures** rules in Supabase. **n8n evaluates*
 
 When inserting into `messages_received`, set:
 
-- `user_id` (required for multi-user / RLS)
+- `user_id` (**NOT NULL** — required; rows without an owner are rejected by the database)
 - `from`, `message`, `message_type`
 - `is_group`, `group_id`, `participant`, `was_mentioned`
 - `processed = false`
@@ -34,11 +34,10 @@ SELECT * FROM app.message_rules
 WHERE user_id = $user_id AND enabled = true
 ORDER BY position ASC;
 
-SELECT phone FROM app.family_members WHERE user_id = $user_id;
-SELECT phone FROM app.business_partners WHERE user_id = $user_id;
+SELECT phone, contact_group FROM app.important_contacts WHERE user_id = $user_id;
 ```
 
-Normalize phones with `app.normalize_phone` (or equivalent digits-only) before matching `from` / `participant`.
+Normalize phones with `app.normalize_phone` (or equivalent digits-only) before matching `from` / `participant`. Partition contacts in memory by `contact_group`.
 
 ## Evaluate (first-match)
 
@@ -51,18 +50,67 @@ else:
   disposition = none  # do not create a card
 ```
 
-### Condition types (`schema_version` 1)
+### Condition types (`schema_version` 3)
 
 | type | Match |
 |------|--------|
-| `from_list` | `list`: `family` \| `partners` — sender phone ∈ list (DM uses `from`, group uses `participant`) |
+| `from_list` | `list`: `partners` \| `family` \| `clients` — sender phone ∈ contacts with that `contact_group` (DM uses `from`, group uses `participant`) |
 | `from_phones` | exact normalized phones |
 | `in_groups` | `is_group` and `group_id` ∈ `group_ids` |
 | `was_mentioned` | `was_mentioned = true` |
 | `message_type` | `message_type` ∈ `types` |
-| `keyword_any` / `keyword_all` | substring match on `message` |
+| `theme_any` | LLM: message is about **any** of the listed themes (see below) |
 
 Unknown `type` → condition is **false** (fail-closed).
+
+### Per-rule evaluation order
+
+1. Evaluate all **deterministic** conditions (`from_list`, `from_phones`, `in_groups`, `was_mentioned`, `message_type`) without an LLM.
+2. If any deterministic condition fails → rule does not match (do **not** call the LLM).
+3. If the rule has `theme_any` → call the LLM once with the message text and `themes[]`. Match if **any** theme is present. On LLM/API/parse failure → condition is **false** (fail-closed).
+4. If all conditions pass → apply `actions`.
+
+### `theme_any` LLM contract
+
+Input (conceptual):
+
+- `message`: string (message body; for media without text, use a short placeholder such as `[image]` / `[audio]`)
+- `themes`: string[] (1–10 natural-language criteria)
+
+Expected JSON output:
+
+```json
+{
+  "matches": true,
+  "matched_themes": ["urgência familiar por doença ou problema de saúde"]
+}
+```
+
+- `matches` is `true` if **any** theme is semantically present (synonyms / paraphrase count; exact wording not required).
+- Prefer a cheap structured model; temperature `0`.
+
+Example rule:
+
+```json
+{
+  "conditions": [
+    { "type": "from_list", "list": "family" },
+    {
+      "type": "theme_any",
+      "themes": [
+        "urgência familiar por doença ou problema de saúde",
+        "alguém machucado, ferido ou acidentado"
+      ]
+    }
+  ],
+  "actions": {
+    "disposition": "create",
+    "priority": "high",
+    "tag_ids": [],
+    "lane_key": "todo"
+  }
+}
+```
 
 ### Actions
 
@@ -98,12 +146,17 @@ WHERE id = $id AND processed = false;
   "disposition": "create|ignore|none",
   "priority": "high",
   "tag_ids": [],
-  "schema_version": 1,
-  "evaluator": "n8n@1",
+  "schema_version": 3,
+  "evaluator": "n8n@3",
   "evaluated_at": "ISO-8601",
-  "match_mode": "first_match"
+  "match_mode": "first_match",
+  "theme_match": {
+    "matched_themes": ["urgência familiar por doença ou problema de saúde"]
+  }
 }
 ```
+
+`theme_match` is optional; include when a `theme_any` condition was evaluated.
 
 ## Idempotency
 
@@ -115,4 +168,4 @@ n8n uses Supabase **service_role**. Never expose that key in the browser.
 
 ## App UI
 
-Rules module: `/rules` — natural language compile → confirm → save into `app.message_rules`.
+Rules module: `/rules` — natural language compile → confirm (editable who + themes) → save into `app.message_rules`.

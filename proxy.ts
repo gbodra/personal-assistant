@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 import { auth } from "@/lib/auth"
+import { isSignupAllowed } from "@/lib/security/signup"
 
 const SESSION_COOKIE_PREFIXES = [
   "authjs.session-token",
@@ -31,6 +32,10 @@ export async function proxy(request: NextRequest) {
   const session = await getSessionSafely()
   const { pathname } = request.nextUrl
   const isLoggedIn = !!session?.user
+
+  if (pathname.startsWith("/signup") && !isSignupAllowed()) {
+    return NextResponse.redirect(new URL("/login", request.nextUrl.origin))
+  }
 
   const isAuthPage =
     pathname.startsWith("/login") || pathname.startsWith("/signup")

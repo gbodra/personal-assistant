@@ -11,12 +11,27 @@ function priorityLabel(priority: Priority, dict: Dictionary): string {
   return dict.rules.priority[priority]
 }
 
+function truncateList(items: string[], max = 3): string {
+  if (items.length <= max) return items.join(", ")
+  return `${items.slice(0, max).join(", ")} +${items.length - max}`
+}
+
 function conditionLabel(condition: RuleCondition, dict: Dictionary): string {
   switch (condition.type) {
-    case "from_list":
-      return condition.list === "family"
-        ? dict.rules.conditionFamily
-        : dict.rules.conditionPartners
+    case "from_list": {
+      switch (condition.list) {
+        case "family":
+          return dict.rules.conditionFamily
+        case "partners":
+          return dict.rules.conditionPartners
+        case "clients":
+          return dict.rules.conditionClients
+        default: {
+          const _exhaustive: never = condition.list
+          return _exhaustive
+        }
+      }
+    }
     case "from_phones":
       return dict.rules.conditionPhones.replace(
         "{count}",
@@ -34,15 +49,10 @@ function conditionLabel(condition: RuleCondition, dict: Dictionary): string {
         "{types}",
         condition.types.join(", ")
       )
-    case "keyword_any":
-      return dict.rules.conditionKeywordsAny.replace(
-        "{keywords}",
-        condition.keywords.join(", ")
-      )
-    case "keyword_all":
-      return dict.rules.conditionKeywordsAll.replace(
-        "{keywords}",
-        condition.keywords.join(", ")
+    case "theme_any":
+      return dict.rules.conditionThemes.replace(
+        "{themes}",
+        truncateList(condition.themes)
       )
     default: {
       const _exhaustive: never = condition
@@ -66,6 +76,13 @@ function actionsSummary(actions: RuleActions, dict: Dictionary): string {
     .replace("{tags}", tags)
 }
 
+function joinWhen(parts: string[]): string {
+  if (parts.length === 0) return ""
+  if (parts.length === 1) return parts[0] ?? ""
+  if (parts.length === 2) return `${parts[0]} e ${parts[1]}`
+  return `${parts.slice(0, -1).join(", ")} e ${parts[parts.length - 1]}`
+}
+
 export function mirrorSentence(
   rule: Pick<MessageRuleDraft, "conditions" | "actions" | "isCatchAll">,
   dict: Dictionary
@@ -73,7 +90,7 @@ export function mirrorSentence(
   const when = rule.isCatchAll
     ? dict.rules.catchAll
     : rule.conditions.length > 0
-      ? rule.conditions.map((c) => conditionLabel(c, dict)).join(" · ")
+      ? joinWhen(rule.conditions.map((c) => conditionLabel(c, dict)))
       : dict.rules.unknownWhen
   return dict.rules.mirror
     .replace("{when}", when)
@@ -83,7 +100,7 @@ export function mirrorSentence(
 export function listItemSummary(rule: MessageRule, dict: Dictionary): string {
   const when = rule.isCatchAll
     ? dict.rules.catchAll
-    : rule.conditions.map((c) => conditionLabel(c, dict)).join(" · ")
+    : joinWhen(rule.conditions.map((c) => conditionLabel(c, dict)))
   return `${dict.rules.when}: ${when} · ${dict.rules.then}: ${actionsSummary(rule.actions, dict)}`
 }
 

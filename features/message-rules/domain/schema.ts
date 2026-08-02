@@ -32,16 +32,9 @@ const messageTypeCondition = z.object({
   types: z.array(z.enum(MESSAGE_TYPES)).min(1),
 })
 
-const keywordAnyCondition = z.object({
-  type: z.literal("keyword_any"),
-  keywords: z.array(z.string().min(1).max(80)).min(1).max(40),
-  case_sensitive: z.boolean().optional(),
-})
-
-const keywordAllCondition = z.object({
-  type: z.literal("keyword_all"),
-  keywords: z.array(z.string().min(1).max(80)).min(1).max(40),
-  case_sensitive: z.boolean().optional(),
+const themeAnyCondition = z.object({
+  type: z.literal("theme_any"),
+  themes: z.array(z.string().trim().min(1).max(200)).min(1).max(10),
 })
 
 export const ruleConditionSchema: z.ZodType<RuleCondition> = z.discriminatedUnion(
@@ -52,8 +45,7 @@ export const ruleConditionSchema: z.ZodType<RuleCondition> = z.discriminatedUnio
     inGroupsCondition,
     wasMentionedCondition,
     messageTypeCondition,
-    keywordAnyCondition,
-    keywordAllCondition,
+    themeAnyCondition,
   ]
 )
 
@@ -118,4 +110,4 @@ export const saveRuleSchema = z
     }
   })
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 3

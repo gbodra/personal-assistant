@@ -7,6 +7,7 @@ import { z } from "zod"
 import { signIn } from "@/lib/auth"
 import { fail, ok, type ActionResult } from "@/lib/actions/result"
 import { ensureDefaultBoard } from "@/features/kanban/data/board-repository"
+import { isSignupAllowed } from "@/lib/security/signup"
 import { getNextAuthAdmin } from "@/lib/supabase/admin"
 
 const signupSchema = z.object({
@@ -23,6 +24,10 @@ const loginSchema = z.object({
 export async function signupAction(
   input: z.infer<typeof signupSchema>
 ): Promise<ActionResult<{ email: string }>> {
+  if (!isSignupAllowed()) {
+    return fail("FORBIDDEN", "SIGNUP_DISABLED")
+  }
+
   const parsed = signupSchema.safeParse(input)
   if (!parsed.success) {
     return fail("VALIDATION", "Invalid signup data")

@@ -1,6 +1,7 @@
 import { LoginForm } from "@/features/auth/components/auth-forms"
 import { getDictionary } from "@/lib/i18n"
 import { getLocale } from "@/lib/i18n/get-locale"
+import { isSignupAllowed } from "@/lib/security/signup"
 
 export default async function LoginPage() {
   const locale = await getLocale()
@@ -13,7 +14,7 @@ export default async function LoginPage() {
           <p className="text-lg font-semibold tracking-tight">{dict.app.name}</p>
           <h1 className="text-sm font-medium">{dict.auth.loginTitle}</h1>
         </div>
-        <LoginForm dict={dict} />
+        <LoginForm dict={dict} showSignupLink={isSignupAllowed()} />
       </div>
     </div>
   )

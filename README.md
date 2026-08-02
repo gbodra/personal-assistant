@@ -12,7 +12,7 @@ Open-source personal operating system. Start with **Daily Focus** (kanban) and g
 
 ## Features (MVP)
 
-- Auth: sign up / sign in with email and password
+- Auth: sign in with email and password (signup only in local development)
 - Daily Focus board with lanes: To do, Doing, Done, Canceled
 - Cards: title, description, tags, due date
 - Drag and drop between lanes (desktop)
@@ -20,7 +20,7 @@ Open-source personal operating system. Start with **Daily Focus** (kanban) and g
 - Done cards turn green; archive from Done
 - Activity history stored in `app.activity_events`
 - Settings: language (EN/PT) and theme
-- Family directory (name + phone)
+- Important contacts directory (partners / family / clients — name + phone + group)
 - WhatsApp message rules: natural-language compose, stored in Supabase for n8n classification
 - Card priority (`critical` / `high` / `normal` / `low`)
 
@@ -37,7 +37,7 @@ pnpm install
 1. Create a Supabase project
 2. In **SQL Editor**, run the migrations in order from [`supabase/migrations/`](supabase/migrations/)
 3. **Expose custom schemas** (required): open [API Settings](https://supabase.com/dashboard/project/_/settings/api) → **Exposed schemas** and add `next_auth` and `app` (keep `public`)
-4. Copy project URL, **publishable** key, **service role** key, and JWT secret
+4. Copy project URL, **publishable** key, and **service role** key
 
 Without step 3, signup fails with `PGRST106 Invalid schema: next_auth`.
 
@@ -52,19 +52,30 @@ Fill in:
 | Variable | Description |
 |----------|-------------|
 | `AUTH_SECRET` | `openssl rand -base64 32` |
-| `AUTH_URL` | `http://localhost:3000` locally |
+| `AUTH_URL` | `http://localhost:3000` locally; production URL on Render |
+| `AUTH_TRUST_HOST` | `true` (needed on Render) |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (Settings → API Keys) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server only) |
-| `SUPABASE_JWT_SECRET` | JWT secret (for RLS-ready tokens) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (**server only** — never `NEXT_PUBLIC_`) |
+| `SUPABASE_JWT_SECRET` | Optional; reserved for a future JWT+RLS path |
+| `OPENAI_API_KEY` | Optional; NL rule compile (falls back to heuristics) |
 
-### 4. Run
+### 4. Run (and create accounts)
 
 ```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), create an account, and use Daily Focus.
+Open [http://localhost:3000](http://localhost:3000). **Signup is only available in development** (`NODE_ENV !== production`). Create accounts via `/signup` locally against the same Supabase project you use in production. On Render, `/signup` redirects to login and `signupAction` is denied.
+
+## Deploy on Render
+
+1. Create a **Web Service** from this repo (Node). Build: `pnpm install && pnpm build`. Start: `pnpm start`.
+2. Set env vars from the table above. Use a strong unique `AUTH_SECRET`. Set `AUTH_URL` to `https://<your-service>.onrender.com` (or custom domain).
+3. Keep `SUPABASE_SERVICE_ROLE_KEY` and `OPENAI_API_KEY` as **secret** env vars (not public).
+4. Confirm Supabase schemas `app` and `next_auth` are exposed.
+5. If using n8n/WhatsApp: store `service_role` only in n8n credentials; every `messages_received` insert **must** set `user_id` (column is `NOT NULL`). See [`integrations/whatsapp-n8n/README.md`](integrations/whatsapp-n8n/README.md).
+6. Login attempts and rule compile are rate-limited in-memory (per instance; resets on cold start).
 
 ## Project structure
 
@@ -72,7 +83,7 @@ Open [http://localhost:3000](http://localhost:3000), create an account, and use 
 app/(app)/          # Authenticated shell routes
 app/(auth)/         # Login / signup
 features/kanban/    # Daily Focus domain, actions, UI
-features/family/    # Family members directory
+features/contacts/  # Important contacts directory (partners / family / clients)
 features/message-rules/ # WhatsApp prioritization rules (NL → structured)
 features/auth/      # Auth forms and locale action
 lib/auth/           # Auth.js config

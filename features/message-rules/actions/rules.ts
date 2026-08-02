@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-import { listFamilyMembers } from "@/features/family/data/family-repository"
+import { listImportantContacts } from "@/features/contacts/data/contacts-repository"
+import { CONTACT_GROUPS } from "@/features/contacts/domain/types"
 import {
   createMessageRule,
   deleteMessageRule,
@@ -15,12 +16,16 @@ import {
 import { ruleCompiler } from "@/features/message-rules/domain/compiler"
 import { saveRuleSchema } from "@/features/message-rules/domain/schema"
 import type {
+  ContactList,
   MessageRule,
   MessageRuleDraft,
 } from "@/features/message-rules/domain/types"
 import { fail, ok, type ActionResult } from "@/lib/actions/result"
 import { requireUser } from "@/lib/auth/session"
-import { getAppAdmin } from "@/lib/supabase/admin"
+import {
+  checkRateLimit,
+  COMPILE_RATE_LIMIT,
+} from "@/lib/security/rate-limit"
 
 function mapError(error: unknown): ActionResult<never> {
   const message = error instanceof Error ? error.message : "INTERNAL"
@@ -45,25 +50,35 @@ export async function compileRuleAction(
 ): Promise<ActionResult<MessageRuleDraft>> {
   try {
     const user = await requireUser()
+    const rate = checkRateLimit(
+      `compile:${user.id}`,
+      COMPILE_RATE_LIMIT.limit,
+      COMPILE_RATE_LIMIT.windowMs
+    )
+    if (!rate.allowed) {
+      return fail("FORBIDDEN", "RATE_LIMITED")
+    }
+
     const parsed = z.string().trim().min(1).max(4000).safeParse(utterance)
     if (!parsed.success) {
       return fail("VALIDATION", "Describe the rule first")
     }
 
-    const [family, groups] = await Promise.all([
-      listFamilyMembers(user.id),
+    const [contacts, groups] = await Promise.all([
+      listImportantContacts(user.id),
       listWhatsappGroups(user.id),
     ])
 
-    const db = getAppAdmin()
-    const { data: partners } = await db
-      .from("business_partners")
-      .select("name")
-      .eq("user_id", user.id)
+    const contactsByGroup = Object.fromEntries(
+      CONTACT_GROUPS.map((group) => [group, [] as string[]])
+    ) as Record<ContactList, string[]>
+
+    for (const contact of contacts) {
+      contactsByGroup[contact.contactGroup].push(contact.name)
+    }
 
     const draft = await ruleCompiler.compile(parsed.data, {
-      familyNames: family.map((m) => m.name),
-      partnerNames: (partners ?? []).map((p) => p.name),
+      contactsByGroup,
       groupNames: groups.map((g) => ({
         name: g.name,
         externalGroupId: g.externalGroupId,
