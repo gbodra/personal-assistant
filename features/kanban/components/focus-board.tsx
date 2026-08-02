@@ -60,6 +60,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CardEditorSheet } from "@/features/kanban/components/card-editor-sheet"
+import { useCardsRealtime } from "@/features/kanban/hooks/use-cards-realtime"
 import { AppTopBar } from "@/components/shell/app-top-bar"
 import Link from "next/link"
 
@@ -364,6 +365,8 @@ export function FocusBoard({
   const [deleteTarget, setDeleteTarget] = useState<Card | null>(null)
   const [mobileLane, setMobileLane] = useState<LaneKey>("todo")
   const [, startTransition] = useTransition()
+
+  useCardsRealtime(initialBoard.id)
 
   if (initialBoard !== boardSnapshot) {
     setBoardSnapshot(initialBoard)

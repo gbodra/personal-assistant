@@ -57,7 +57,7 @@ Fill in:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (Settings → API Keys) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (**server only** — never `NEXT_PUBLIC_`) |
-| `SUPABASE_JWT_SECRET` | Optional; reserved for a future JWT+RLS path |
+| `SUPABASE_JWT_SECRET` | JWT secret from Supabase Dashboard → Settings → API (required for Focus board Realtime) |
 | `OPENAI_API_KEY` | Optional; NL rule compile (falls back to heuristics) |
 
 ### 4. Run (and create accounts)
@@ -72,8 +72,8 @@ Open [http://localhost:3000](http://localhost:3000). **Signup is only available 
 
 1. Create a **Web Service** from this repo (Node). Build: `pnpm install && pnpm build`. Start: `pnpm start`.
 2. Set env vars from the table above. Use a strong unique `AUTH_SECRET`. Set `AUTH_URL` to `https://<your-service>.onrender.com` (or custom domain).
-3. Keep `SUPABASE_SERVICE_ROLE_KEY` and `OPENAI_API_KEY` as **secret** env vars (not public).
-4. Confirm Supabase schemas `app` and `next_auth` are exposed.
+3. Keep `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, and `OPENAI_API_KEY` as **secret** env vars (not public).
+4. Confirm Supabase schemas `app` and `next_auth` are exposed. Apply migrations including Realtime on `app.cards`.
 5. If using n8n/WhatsApp: store `service_role` only in n8n credentials; every `messages_received` insert **must** set `user_id` (column is `NOT NULL`). See [`integrations/whatsapp-n8n/README.md`](integrations/whatsapp-n8n/README.md).
 6. Login attempts and rule compile are rate-limited in-memory (per instance; resets on cold start).
 

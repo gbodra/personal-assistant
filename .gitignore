@@ -32,6 +32,10 @@ pnpm-debug.log*
 .env*
 !.env.example
 
+# Supabase CLI local cache (never commit)
+supabase/.temp/
+supabase/.branches/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

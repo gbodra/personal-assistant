@@ -6,6 +6,10 @@ ALTER TABLE app.cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.card_tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.activity_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.important_contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.whatsapp_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.message_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.messages_received ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY boards_owner ON app.boards
   FOR ALL
@@ -53,6 +57,26 @@ CREATE POLICY card_tags_owner ON app.card_tags
   );
 
 CREATE POLICY activity_owner ON app.activity_events
+  FOR ALL
+  USING (user_id = next_auth.uid())
+  WITH CHECK (user_id = next_auth.uid());
+
+CREATE POLICY important_contacts_owner ON app.important_contacts
+  FOR ALL
+  USING (user_id = next_auth.uid())
+  WITH CHECK (user_id = next_auth.uid());
+
+CREATE POLICY whatsapp_groups_owner ON app.whatsapp_groups
+  FOR ALL
+  USING (user_id = next_auth.uid())
+  WITH CHECK (user_id = next_auth.uid());
+
+CREATE POLICY message_rules_owner ON app.message_rules
+  FOR ALL
+  USING (user_id = next_auth.uid())
+  WITH CHECK (user_id = next_auth.uid());
+
+CREATE POLICY messages_received_owner ON app.messages_received
   FOR ALL
   USING (user_id = next_auth.uid())
   WITH CHECK (user_id = next_auth.uid());

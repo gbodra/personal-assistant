@@ -9,7 +9,7 @@ const envSchema = z
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-    SUPABASE_JWT_SECRET: z.string().min(1).optional(),
+    SUPABASE_JWT_SECRET: z.string().min(1),
     OPENAI_API_KEY: z.string().optional(),
     OPENAI_MODEL: z.string().optional(),
   })
