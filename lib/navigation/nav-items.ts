@@ -19,22 +19,6 @@ export const navItems: NavItem[] = [
     href: "/focus",
     icon: Focus,
     stage: "ga",
-    children: [
-      {
-        id: "focus-board",
-        labelKey: "board",
-        href: "/focus",
-        icon: Focus,
-        stage: "ga",
-      },
-      {
-        id: "focus-archive",
-        labelKey: "archive",
-        href: "/focus/archive",
-        icon: Archive,
-        stage: "ga",
-      },
-    ],
   },
   {
     id: "family",

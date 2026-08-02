@@ -31,10 +31,10 @@ function labelFor(item: NavItem, dict: Dictionary) {
 export function AppSidebar({
   dict,
   user,
-}: {
+}: Readonly<{
   dict: Dictionary
   user: { name?: string | null; email?: string | null; image?: string | null }
-}) {
+}>) {
   const pathname = usePathname()
   const items = visibleNavItems()
 

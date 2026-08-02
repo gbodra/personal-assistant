@@ -655,6 +655,7 @@ export function FocusBoard({
 
             <div className="hidden min-h-0 flex-1 md:block">
               <DndContext
+                id="focus-board"
                 sensors={sensors}
                 collisionDetection={closestCorners}
                 onDragStart={onDragStart}
