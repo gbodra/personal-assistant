@@ -5,7 +5,7 @@ import {
   POSITION_GAP,
 } from "@/features/kanban/domain/rules"
 import type { Card, LaneKey, Tag } from "@/features/kanban/domain/types"
-import { isLaneKey } from "@/features/kanban/domain/types"
+import { isCardPriority, isLaneKey } from "@/features/kanban/domain/types"
 import { recordActivity } from "@/features/kanban/data/activity-repository"
 import { getAppAdmin } from "@/lib/supabase/admin"
 
@@ -18,6 +18,7 @@ type CardRow = {
   description: string | null
   due_at: string | null
   position: number
+  priority?: string | null
   archived_at: string | null
   created_at: string
   updated_at: string
@@ -78,6 +79,8 @@ async function loadCardTags(cardId: string): Promise<Tag[]> {
 async function toCard(row: CardRow, laneKey?: LaneKey): Promise<Card> {
   const key = laneKey ?? (await getLaneKey(row.lane_id))
   const tags = await loadCardTags(row.id)
+  const priority =
+    row.priority && isCardPriority(row.priority) ? row.priority : "normal"
   return {
     id: row.id,
     boardId: row.board_id,
@@ -88,6 +91,7 @@ async function toCard(row: CardRow, laneKey?: LaneKey): Promise<Card> {
     description: row.description,
     dueAt: row.due_at,
     position: Number(row.position),
+    priority,
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

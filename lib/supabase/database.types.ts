@@ -145,6 +145,8 @@ export type Database = {
         description: string | null
         due_at: string | null
         position: number
+        priority: string
+        source_message_id: string | null
         archived_at: string | null
         created_at: string
         updated_at: string
@@ -158,6 +160,8 @@ export type Database = {
         description?: string | null
         due_at?: string | null
         position: number
+        priority?: string
+        source_message_id?: string | null
         archived_at?: string | null
         created_at?: string
         updated_at?: string
@@ -225,6 +229,114 @@ export type Database = {
         phone: string
         created_at?: string
         updated_at?: string
+      }
+    >
+    business_partners: GenericTable<
+      {
+        id: string
+        user_id: string
+        name: string
+        phone: string
+        created_at: string
+        updated_at: string
+      },
+      {
+        id?: string
+        user_id: string
+        name: string
+        phone: string
+        created_at?: string
+        updated_at?: string
+      }
+    >
+    whatsapp_groups: GenericTable<
+      {
+        id: string
+        user_id: string
+        external_group_id: string
+        name: string
+        created_at: string
+        updated_at: string
+      },
+      {
+        id?: string
+        user_id: string
+        external_group_id: string
+        name: string
+        created_at?: string
+        updated_at?: string
+      }
+    >
+    message_rules: GenericTable<
+      {
+        id: string
+        user_id: string
+        name: string
+        enabled: boolean
+        position: number
+        schema_version: number
+        conditions: Json
+        actions: Json
+        is_catch_all: boolean
+        source_utterance: string | null
+        created_at: string
+        updated_at: string
+      },
+      {
+        id?: string
+        user_id: string
+        name: string
+        enabled?: boolean
+        position: number
+        schema_version?: number
+        conditions?: Json
+        actions: Json
+        is_catch_all?: boolean
+        source_utterance?: string | null
+        created_at?: string
+        updated_at?: string
+      }
+    >
+    messages_received: GenericTable<
+      {
+        id: string
+        created_at: string
+        from: string | null
+        message: string | null
+        message_type: string | null
+        image_base64: string | null
+        video_bse64: string | null
+        audio_base64: string | null
+        processed: boolean | null
+        is_group: boolean
+        group_id: string | null
+        participant: string | null
+        was_mentioned: boolean
+        user_id: string | null
+        matched_rule_id: string | null
+        card_id: string | null
+        classification: Json
+        processed_at: string | null
+      },
+      {
+        id?: string
+        created_at?: string
+        from?: string | null
+        message?: string | null
+        message_type?: string | null
+        image_base64?: string | null
+        video_bse64?: string | null
+        audio_base64?: string | null
+        processed?: boolean | null
+        is_group?: boolean
+        group_id?: string | null
+        participant?: string | null
+        was_mentioned?: boolean
+        user_id?: string | null
+        matched_rule_id?: string | null
+        card_id?: string | null
+        classification?: Json
+        processed_at?: string | null
       }
     >
   }>

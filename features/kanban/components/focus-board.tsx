@@ -175,6 +175,25 @@ function KanbanCardFace({
         </DropdownMenu>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {card.priority !== "normal" ? (
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[10px]",
+              card.priority === "critical" &&
+                "border-destructive/40 text-destructive",
+              card.priority === "high" &&
+                "border-orange-500/40 text-orange-700 dark:text-orange-300",
+              card.priority === "low" && "text-muted-foreground"
+            )}
+          >
+            {card.priority === "critical"
+              ? dict.card.priorityCritical
+              : card.priority === "high"
+                ? dict.card.priorityHigh
+                : dict.card.priorityLow}
+          </Badge>
+        ) : null}
         {visibleTags.map((tag) => (
           <Badge key={tag.id} variant="secondary" className="text-[10px]">
             {tag.name}

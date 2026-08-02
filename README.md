@@ -20,6 +20,9 @@ Open-source personal operating system. Start with **Daily Focus** (kanban) and g
 - Done cards turn green; archive from Done
 - Activity history stored in `app.activity_events`
 - Settings: language (EN/PT) and theme
+- Family directory (name + phone)
+- WhatsApp message rules: natural-language compose, stored in Supabase for n8n classification
+- Card priority (`critical` / `high` / `normal` / `low`)
 
 ## Setup
 
@@ -69,12 +72,14 @@ Open [http://localhost:3000](http://localhost:3000), create an account, and use 
 app/(app)/          # Authenticated shell routes
 app/(auth)/         # Login / signup
 features/kanban/    # Daily Focus domain, actions, UI
+features/family/    # Family members directory
+features/message-rules/ # WhatsApp prioritization rules (NL → structured)
 features/auth/      # Auth forms and locale action
 lib/auth/           # Auth.js config
 lib/supabase/       # Server Supabase clients
 lib/navigation/     # Module nav registry
 lib/events/         # In-process domain event bus
-integrations/       # Future external adapters
+integrations/       # External adapters + n8n WhatsApp contract
 supabase/migrations/
 ```
 

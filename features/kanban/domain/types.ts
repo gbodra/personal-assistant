@@ -2,6 +2,9 @@ export const LANE_KEYS = ["todo", "doing", "done", "canceled"] as const
 
 export type LaneKey = (typeof LANE_KEYS)[number]
 
+export const CARD_PRIORITIES = ["critical", "high", "normal", "low"] as const
+export type CardPriority = (typeof CARD_PRIORITIES)[number]
+
 export type Tag = {
   id: string
   name: string
@@ -18,10 +21,15 @@ export type Card = {
   description: string | null
   dueAt: string | null
   position: number
+  priority: CardPriority
   archivedAt: string | null
   createdAt: string
   updatedAt: string
   tags: Tag[]
+}
+
+export function isCardPriority(value: string): value is CardPriority {
+  return (CARD_PRIORITIES as readonly string[]).includes(value)
 }
 
 export type Lane = {

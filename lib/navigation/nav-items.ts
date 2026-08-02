@@ -1,11 +1,11 @@
 import type { LucideIcon } from "lucide-react"
-import { Archive, Focus, Settings, Users } from "lucide-react"
+import { Focus, ListFilter, Settings, Users } from "lucide-react"
 
 export type NavStage = "ga" | "beta" | "hidden"
 
 export type NavItem = {
   id: string
-  labelKey: "focus" | "board" | "archive" | "family" | "settings"
+  labelKey: "focus" | "board" | "archive" | "family" | "rules" | "settings"
   href: string
   icon: LucideIcon
   stage: NavStage
@@ -25,6 +25,13 @@ export const navItems: NavItem[] = [
     labelKey: "family",
     href: "/family",
     icon: Users,
+    stage: "ga",
+  },
+  {
+    id: "rules",
+    labelKey: "rules",
+    href: "/rules",
+    icon: ListFilter,
     stage: "ga",
   },
   {

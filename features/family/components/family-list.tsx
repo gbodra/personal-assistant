@@ -2,7 +2,7 @@
 
 import { LayoutGrid, List, Pencil, Plus, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import {
@@ -78,7 +78,11 @@ export function FamilyList({
   dict: Dictionary
 }>) {
   const router = useRouter()
-  const [viewMode, setViewMode] = useState<ViewMode>("cards")
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === "undefined") return "cards"
+    const stored = window.localStorage.getItem(VIEW_MODE_KEY)
+    return stored === "cards" || stored === "table" ? stored : "cards"
+  })
   const [editorOpen, setEditorOpen] = useState(false)
   const [editing, setEditing] = useState<FamilyMember | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<FamilyMember | null>(null)
@@ -86,13 +90,6 @@ export function FamilyList({
   const [phone, setPhone] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(VIEW_MODE_KEY)
-    if (stored === "cards" || stored === "table") {
-      setViewMode(stored)
-    }
-  }, [])
 
   function setAndPersistViewMode(mode: ViewMode) {
     setViewMode(mode)

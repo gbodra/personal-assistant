@@ -1,6 +1,6 @@
 import { DEFAULT_LANE_DEFS } from "@/features/kanban/domain/rules"
 import type { Board, Card, Lane, LaneKey, Tag } from "@/features/kanban/domain/types"
-import { isLaneKey } from "@/features/kanban/domain/types"
+import { isCardPriority, isLaneKey } from "@/features/kanban/domain/types"
 import { getAppAdmin } from "@/lib/supabase/admin"
 
 type CardRow = {
@@ -12,6 +12,7 @@ type CardRow = {
   description: string | null
   due_at: string | null
   position: number
+  priority?: string | null
   archived_at: string | null
   created_at: string
   updated_at: string
@@ -32,6 +33,8 @@ function mapCard(row: CardRow, laneKey: LaneKey): Card {
     description: row.description,
     dueAt: row.due_at,
     position: Number(row.position),
+    priority:
+      row.priority && isCardPriority(row.priority) ? row.priority : "normal",
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
