@@ -18,6 +18,7 @@ import {
 import type { Dictionary } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import { AppTopBar } from "@/components/shell/app-top-bar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -174,11 +175,6 @@ export function ContactsList({
     }
   }
 
-  const byGroup = CONTACT_GROUPS.map((group) => ({
-    group,
-    items: contacts.filter((c) => c.contactGroup === group),
-  })).filter((section) => section.items.length > 0)
-
   let content: ReactNode
   if (contacts.length === 0) {
     content = (
@@ -195,84 +191,71 @@ export function ContactsList({
     )
   } else if (viewMode === "cards") {
     content = (
-      <div className="mx-auto flex max-w-4xl flex-col gap-8">
-        {byGroup.map(({ group, items }) => (
-          <section key={group} className="space-y-3">
-            <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {groupLabel(group, dict)}
-            </h2>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {items.map((contact) => (
-                <li
-                  key={contact.id}
-                  className="bg-card flex items-center gap-3 rounded-xl border p-4"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">{contact.name}</p>
-                    <p className="text-muted-foreground font-mono text-sm">
-                      {contact.phone}
-                    </p>
-                  </div>
-                  <ContactActions
-                    contact={contact}
-                    dict={dict}
-                    onEdit={openEdit}
-                    onDelete={setDeleteTarget}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
+      <ul className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2">
+        {contacts.map((contact) => (
+          <li
+            key={contact.id}
+            className="bg-card flex items-center gap-3 rounded-xl border p-4"
+          >
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{contact.name}</p>
+                <Badge variant="secondary" className="text-[10px]">
+                  {groupLabel(contact.contactGroup, dict)}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground font-mono text-sm">
+                {contact.phone}
+              </p>
+            </div>
+            <ContactActions
+              contact={contact}
+              dict={dict}
+              onEdit={openEdit}
+              onDelete={setDeleteTarget}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
     )
   } else {
     content = (
-      <div className="mx-auto flex max-w-4xl flex-col gap-8">
-        {byGroup.map(({ group, items }) => (
-          <section key={group} className="space-y-3">
-            <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {groupLabel(group, dict)}
-            </h2>
-            <div className="overflow-x-auto rounded-xl border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted/50 border-b text-left">
-                    <th className="px-4 py-3 font-medium">
-                      {dict.contacts.name}
-                    </th>
-                    <th className="px-4 py-3 font-medium">
-                      {dict.contacts.phone}
-                    </th>
-                    <th className="px-4 py-3 text-right font-medium">
-                      {dict.contacts.actions}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((contact) => (
-                    <tr key={contact.id} className="border-b last:border-b-0">
-                      <td className="px-4 py-3 font-medium">{contact.name}</td>
-                      <td className="text-muted-foreground px-4 py-3 font-mono">
-                        {contact.phone}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end">
-                          <ContactActions
-                            contact={contact}
-                            dict={dict}
-                            onEdit={openEdit}
-                            onDelete={setDeleteTarget}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ))}
+      <div className="mx-auto max-w-4xl overflow-x-auto rounded-xl border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/50 border-b text-left">
+              <th className="px-4 py-3 font-medium">{dict.contacts.name}</th>
+              <th className="px-4 py-3 font-medium">{dict.contacts.phone}</th>
+              <th className="px-4 py-3 font-medium">{dict.contacts.group}</th>
+              <th className="px-4 py-3 text-right font-medium">
+                {dict.contacts.actions}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {contacts.map((contact) => (
+              <tr key={contact.id} className="border-b last:border-b-0">
+                <td className="px-4 py-3 font-medium">{contact.name}</td>
+                <td className="text-muted-foreground px-4 py-3 font-mono">
+                  {contact.phone}
+                </td>
+                <td className="px-4 py-3">
+                  {groupLabel(contact.contactGroup, dict)}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex justify-end">
+                    <ContactActions
+                      contact={contact}
+                      dict={dict}
+                      onEdit={openEdit}
+                      onDelete={setDeleteTarget}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     )
   }
