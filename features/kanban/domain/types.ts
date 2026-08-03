@@ -1,4 +1,4 @@
-export const LANE_KEYS = ["todo", "doing", "done", "canceled"] as const
+export const LANE_KEYS = ["inbox", "todo", "doing", "done", "canceled"] as const
 
 export type LaneKey = (typeof LANE_KEYS)[number]
 

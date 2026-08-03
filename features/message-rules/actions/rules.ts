@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import { listImportantContacts } from "@/features/contacts/data/contacts-repository"
 import { CONTACT_GROUPS } from "@/features/contacts/domain/types"
+import { listInboxEvidence } from "@/features/message-rules/data/inbox-evidence-repository"
 import {
   createMessageRule,
   deleteMessageRule,
@@ -14,6 +15,8 @@ import {
   updateMessageRule,
 } from "@/features/message-rules/data/rules-repository"
 import { ruleCompiler } from "@/features/message-rules/domain/compiler"
+import { compileInboxInsights } from "@/features/message-rules/domain/insight-compiler"
+import { ruleInsightSchema, type RuleInsight } from "@/features/message-rules/domain/insights"
 import { saveRuleSchema } from "@/features/message-rules/domain/schema"
 import type {
   ContactList,
@@ -25,6 +28,7 @@ import { requireUser } from "@/lib/auth/session"
 import {
   checkRateLimit,
   COMPILE_RATE_LIMIT,
+  INSIGHTS_RATE_LIMIT,
 } from "@/lib/security/rate-limit"
 
 function mapError(error: unknown): ActionResult<never> {
@@ -187,6 +191,56 @@ export async function listRulesAction(): Promise<ActionResult<MessageRule[]>> {
     const user = await requireUser()
     const rules = await listMessageRules(user.id)
     return ok(rules)
+  } catch (error) {
+    return mapError(error)
+  }
+}
+
+export async function suggestInboxRuleInsightsAction(): Promise<
+  ActionResult<{
+    insights: RuleInsight[]
+    analyzedCount: number
+    truncated: boolean
+  }>
+> {
+  try {
+    const user = await requireUser()
+    const rate = checkRateLimit(
+      `insights:${user.id}`,
+      INSIGHTS_RATE_LIMIT.limit,
+      INSIGHTS_RATE_LIMIT.windowMs
+    )
+    if (!rate.allowed) {
+      return fail("FORBIDDEN", "RATE_LIMITED")
+    }
+
+    const [{ items, truncated }, rules] = await Promise.all([
+      listInboxEvidence(user.id),
+      listMessageRules(user.id),
+    ])
+
+    if (items.length === 0) {
+      return ok({ insights: [], analyzedCount: 0, truncated: false })
+    }
+
+    const existingRuleSummaries = rules.map(
+      (rule) => rule.sourceUtterance?.trim() || rule.name
+    )
+
+    const rawInsights = await compileInboxInsights(items, {
+      existingRuleSummaries,
+    })
+
+    const insights = rawInsights
+      .map((insight) => ruleInsightSchema.safeParse(insight))
+      .filter((result) => result.success)
+      .map((result) => result.data)
+
+    return ok({
+      insights,
+      analyzedCount: items.length,
+      truncated,
+    })
   } catch (error) {
     return mapError(error)
   }

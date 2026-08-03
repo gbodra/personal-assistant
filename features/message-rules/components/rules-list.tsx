@@ -11,8 +11,11 @@ import {
   createRuleAction,
   deleteRuleAction,
   setRuleEnabledAction,
+  suggestInboxRuleInsightsAction,
   updateRuleAction,
 } from "@/features/message-rules/actions/rules"
+import { InboxInsightsPanel } from "@/features/message-rules/components/inbox-insights"
+import type { RuleInsight } from "@/features/message-rules/domain/insights"
 import type {
   ContactList,
   MessageRule,
@@ -142,11 +145,13 @@ export function RulesList({
   dict,
   contactCounts,
   locale,
+  inboxCount,
 }: Readonly<{
   rules: MessageRule[]
   dict: Dictionary
   contactCounts: Record<ContactList, number>
   locale: string
+  inboxCount: number
 }>) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -171,6 +176,11 @@ export function RulesList({
   )
   const [confirmed, setConfirmed] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  const [insightsStatus, setInsightsStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle")
+  const [insights, setInsights] = useState<RuleInsight[]>([])
+  const [insightsError, setInsightsError] = useState<string | null>(null)
 
   function resetEditor() {
     setStep("describe")
@@ -187,6 +197,18 @@ export function RulesList({
   function openCreate() {
     resetEditor()
     setEditorOpen(true)
+  }
+
+  function openCreateWithUtterance(
+    text: string,
+    options?: { autoInterpret?: boolean }
+  ) {
+    resetEditor()
+    setUtterance(text)
+    setEditorOpen(true)
+    if (options?.autoInterpret) {
+      void handleInterpret(text)
+    }
   }
 
   function openEdit(rule: MessageRule) {
@@ -210,14 +232,15 @@ export function RulesList({
     setEditorOpen(true)
   }
 
-  async function handleInterpret() {
+  async function handleInterpret(utteranceOverride?: string) {
     setError(null)
-    if (!utterance.trim()) {
+    const text = (utteranceOverride ?? utterance).trim()
+    if (!text) {
       setError(dict.rules.describeHint)
       return
     }
     setInterpreting(true)
-    const result = await compileRuleAction(utterance)
+    const result = await compileRuleAction(text)
     setInterpreting(false)
     if (!result.ok) {
       setError(
@@ -230,6 +253,29 @@ export function RulesList({
     setDraft(result.data)
     setConfirmed(false)
     setStep("confirm")
+  }
+
+  async function handleAnalyzeInbox() {
+    setInsightsStatus("loading")
+    setInsightsError(null)
+    const result = await suggestInboxRuleInsightsAction()
+    if (!result.ok) {
+      setInsightsStatus("error")
+      setInsightsError(
+        result.error.message === "RATE_LIMITED"
+          ? dict.rules.insightsRateLimited
+          : dict.rules.insightsError
+      )
+      return
+    }
+    setInsights(result.data.insights)
+    setInsightsStatus("ready")
+  }
+
+  function handleUseInsight(insight: RuleInsight) {
+    openCreateWithUtterance(insight.suggestedUtterance, {
+      autoInterpret: true,
+    })
   }
 
   function updateActions(next: RuleActions) {
@@ -618,7 +664,18 @@ export function RulesList({
         }
       />
 
-      <div className="flex-1 overflow-y-auto p-4">{content}</div>
+      <div className="flex-1 overflow-y-auto p-4">
+        <InboxInsightsPanel
+          inboxCount={inboxCount}
+          dict={dict}
+          status={insightsStatus}
+          insights={insights}
+          errorMessage={insightsError}
+          onAnalyze={() => void handleAnalyzeInbox()}
+          onUseInsight={handleUseInsight}
+        />
+        {content}
+      </div>
 
       <Sheet
         open={editorOpen}

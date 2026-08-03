@@ -1,6 +1,7 @@
 import { listImportantContacts } from "@/features/contacts/data/contacts-repository"
 import { CONTACT_GROUPS } from "@/features/contacts/domain/types"
 import { RulesList } from "@/features/message-rules/components/rules-list"
+import { countInboxCards } from "@/features/message-rules/data/inbox-evidence-repository"
 import { listMessageRules } from "@/features/message-rules/data/rules-repository"
 import type { ContactList } from "@/features/message-rules/domain/types"
 import { requireUser } from "@/lib/auth/session"
@@ -11,9 +12,10 @@ export default async function RulesPage() {
   const user = await requireUser()
   const locale = await getLocale()
   const dict = getDictionary(locale)
-  const [rules, contacts] = await Promise.all([
+  const [rules, contacts, inboxCount] = await Promise.all([
     listMessageRules(user.id),
     listImportantContacts(user.id),
+    countInboxCards(user.id),
   ])
 
   const contactCounts = Object.fromEntries(
@@ -30,6 +32,7 @@ export default async function RulesPage() {
       dict={dict}
       contactCounts={contactCounts}
       locale={locale}
+      inboxCount={inboxCount}
     />
   )
 }

@@ -51,3 +51,4 @@ export function checkRateLimit(
 
 export const LOGIN_RATE_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 } as const
 export const COMPILE_RATE_LIMIT = { limit: 30, windowMs: 60 * 60 * 1000 } as const
+export const INSIGHTS_RATE_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 } as const

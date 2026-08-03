@@ -45,6 +45,7 @@ export const en = {
     overdue: "Overdue",
   },
   lanes: {
+    inbox: "Inbox",
     todo: "To do",
     doing: "Doing",
     done: "Done",
@@ -183,6 +184,17 @@ export const en = {
     },
     addTag: "Add tag",
     rateLimited: "Too many interpretations. Try again in a bit.",
+    insightsTitle: "From your Inbox",
+    insightsHint:
+      "Patterns we spotted in unmatched messages. Use one to draft a rule.",
+    insightsAnalyze: "Analyze Inbox",
+    insightsLoading: "Looking at Inbox…",
+    insightsError: "Couldn't analyze Inbox. Try again.",
+    insightsRetry: "Try again",
+    insightsUse: "Use this suggestion",
+    insightsEvidence: "Based on {count} messages",
+    insightsRateLimited: "Too many Inbox analyses. Try again in a bit.",
+    insightsEmptyResult: "No clear patterns yet. Add a few more Inbox cards or create a rule manually.",
   },
 
   archive: {

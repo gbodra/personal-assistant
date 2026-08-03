@@ -9,10 +9,11 @@ export const DEFAULT_LANE_DEFS: {
   name: string
   position: number
 }[] = [
-  { key: "todo", name: "To do", position: 0 },
-  { key: "doing", name: "Doing", position: 1 },
-  { key: "done", name: "Done", position: 2 },
-  { key: "canceled", name: "Canceled", position: 3 },
+  { key: "inbox", name: "Inbox", position: 0 },
+  { key: "todo", name: "To do", position: 1 },
+  { key: "doing", name: "Doing", position: 2 },
+  { key: "done", name: "Done", position: 3 },
+  { key: "canceled", name: "Canceled", position: 4 },
 ]
 
 export const POSITION_GAP = 1024

@@ -13,7 +13,8 @@ Open-source personal operating system. Start with **Daily Focus** (kanban) and g
 ## Features (MVP)
 
 - Auth: sign in with email and password (signup only in local development)
-- Daily Focus board with lanes: To do, Doing, Done, Canceled
+- Daily Focus board with lanes: Inbox, To do, Doing, Done, Canceled
+- Unmatched WhatsApp messages land in Inbox (n8n fallback); rule `create` still targets To do
 - Cards: title, description, tags, due date
 - Drag and drop between lanes (desktop)
 - Move via status select (mobile / accessibility)

@@ -47,7 +47,8 @@ for rule in rules ordered by position ASC:
     apply rule.actions
     break
 else:
-  disposition = none  # do not create a card
+  # no matching rule → create a Focus card in lane "inbox"
+  create card with priority "normal", lane_key "inbox", matched_rule_id null
 ```
 
 ### Condition types (`schema_version` 3)
@@ -121,31 +122,32 @@ Example rule:
 
 ## Write
 
-**Ignore or no-match**
+**Ignore**
 
 ```sql
 UPDATE app.messages_received SET
   processed = true,
   processed_at = now(),
-  matched_rule_id = $rule_id_or_null,
+  matched_rule_id = $rule_id,
   classification = $classification
 WHERE id = $id AND processed = false;
 ```
 
-**Create**
+**Create** (rule match → lane `todo`, or no-match fallback → lane `inbox`)
 
-1. Resolve Daily Focus board (`slug = 'daily-focus'`) and lane `todo` for `user_id`.
-2. Insert `app.cards` with `priority`, `title` (from message or `[media] from …`), optional `source_message_id`.
-3. Insert `app.card_tags` for each `tag_ids` entry.
-4. Update message with `card_id`, `matched_rule_id`, `classification`, `processed = true`.
+1. Resolve Daily Focus board (`slug = 'daily-focus'`) and the target lane by `key` (`todo` for rule `create` actions, `inbox` for no-match fallback) for `user_id`.
+2. Insert `app.cards` with `priority` (rule priority, or `normal` for inbox fallback), `title` (from message or `[media] from …`), optional `source_message_id`.
+3. Insert `app.card_tags` for each `tag_ids` entry (empty for inbox fallback).
+4. Update message with `card_id`, `matched_rule_id` (rule id, or `null` for inbox fallback), `classification`, `processed = true`.
 
 ### `classification` payload
 
 ```json
 {
-  "disposition": "create|ignore|none",
+  "disposition": "create|ignore",
   "priority": "high",
   "tag_ids": [],
+  "lane_key": "todo",
   "schema_version": 3,
   "evaluator": "n8n@3",
   "evaluated_at": "ISO-8601",
@@ -156,7 +158,23 @@ WHERE id = $id AND processed = false;
 }
 ```
 
+For inbox fallback (no rule matched), use:
+
+```json
+{
+  "disposition": "create",
+  "priority": "normal",
+  "tag_ids": [],
+  "lane_key": "inbox",
+  "schema_version": 3,
+  "evaluator": "n8n@3",
+  "evaluated_at": "ISO-8601",
+  "match_mode": "first_match"
+}
+```
+
 `theme_match` is optional; include when a `theme_any` condition was evaluated.
+`lane_key` should reflect the lane used for `create` (`todo` from rules, `inbox` for no-match).
 
 ## Idempotency
 

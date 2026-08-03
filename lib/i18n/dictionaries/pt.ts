@@ -47,6 +47,7 @@ export const pt: Dictionary = {
     overdue: "Atrasado",
   },
   lanes: {
+    inbox: "Inbox",
     todo: "A fazer",
     doing: "Fazendo",
     done: "Concluído",
@@ -185,6 +186,18 @@ export const pt: Dictionary = {
     },
     addTag: "Adicionar tag",
     rateLimited: "Muitas interpretações. Tente de novo em alguns minutos.",
+    insightsTitle: "A partir da Inbox",
+    insightsHint:
+      "Padrões nas mensagens sem regra. Use um para rascunhar uma regra.",
+    insightsAnalyze: "Analisar Inbox",
+    insightsLoading: "Analisando a Inbox…",
+    insightsError: "Não deu para analisar a Inbox. Tente de novo.",
+    insightsRetry: "Tentar de novo",
+    insightsUse: "Usar esta sugestão",
+    insightsEvidence: "Com base em {count} mensagens",
+    insightsRateLimited: "Muitas análises da Inbox. Tente de novo em alguns minutos.",
+    insightsEmptyResult:
+      "Nenhum padrão claro ainda. Espere mais cards na Inbox ou crie uma regra manualmente.",
   },
   archive: {
     title: "Arquivo",
